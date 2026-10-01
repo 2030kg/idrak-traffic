@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدراك - نظام التنبؤ الإدراكي وإدارة الازدحام المروري</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.25);
+        }
+        .pulse-red {
+            animation: pulse-red-anim 2s infinite;
+        }
+        @keyframes pulse-red-anim {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        #map {
+            height: 480px;
+            border-radius: 0.75rem;
+            z-index: 1;
+        }
+        /* Custom Leaflet Map Dark Filter */
+        .leaflet-tile-container {
+            filter: brightness(0.7) invert(1) contrast(1.2) hue-rotate(200deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-4 space-x-reverse">
+            <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-brain text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide flex items-center gap-2">
+                    منصة إدراك <span class="text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-normal">إصدار الهتكاثون v1.0</span>
+                </h1>
+                <p class="text-xs text-slate-400">نظام التنبؤ الإدراكي والتوأم الرقمي لإدارة الازدحام المروري</p>
+            </div>
+        </div>
+
+        <!-- Real-time Status Badge -->
+        <div class="flex items-center gap-6">
+            <div class="hidden md:flex items-center gap-3 bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-700/50">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-semibold text-slate-300">محرك التنبؤ: <span class="text-emerald-400">متصل (نشط)</span></span>
+            </div>
+            
+            <button id="aiPredictBtn" onclick="triggerAIPrediction()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-lg shadow-cyan-500/25 flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                تفعيل التنبؤ الاستباقي
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Left Control & Stats Panel -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Real-time Metrics Card -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                    <span>مؤشرات الحركة الحية</span>
+                    <i class="fa-solid fa-chart-line text-cyan-400"></i>
+                </h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-800/50 border border-slate-700/40 p-3.5 rounded-xl">
+                        <p class="text-xs text-slate-400 mb-1">معدل التدفق</p>
+                        <p id="flowRate" class="text-xl font-extrabold text-cyan-400">92%</p>
+                        <span class="text-[10px] text-emerald-400">سلس ومستقر</span>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-700/40 p-3.5 rounded-xl">
+                        <p class="text-xs text-slate-400 mb-1">وقت التأخير المتوقع</p>
+                        <p id="delayTime" class="text-xl font-extrabold text-slate-200">3 دقائق</p>
+                        <span class="text-[10px] text-emerald-400">-18% عن المتوسط</span>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-700/40 p-3.5 rounded-xl">
+                        <p class="text-xs text-slate-400 mb-1">الحوادث المحتملة</p>
+                        <p id="riskScore" class="text-xl font-extrabold text-emerald-400">منخفض جداً</p>
+                        <span class="text-[10px] text-slate-400">ثقة الذكاء: 96%</span>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-700/40 p-3.5 rounded-xl">
+                        <p class="text-xs text-slate-400 mb-1">خفّض الانبعاثات</p>
+                        <p class="text-xl font-extrabold text-emerald-400">14.2%</p>
+                        <span class="text-[10px] text-emerald-400">وفر في الوقود</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Controller -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                    <span>محاكاة سيناريوهات الازدحام</span>
+                    <i class="fa-solid fa-sliders text-cyan-400"></i>
+                </h2>
+                <div class="space-y-3">
+                    <button onclick="simulateIncident()" class="w-full bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-between transition">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-car-burst text-rose-400"></i>
+                            محاكاة حادث مروري مفاجئ
+                        </span>
+                        <i class="fa-solid fa-chevron-left text-slate-500 text-xs"></i>
+                    </button>
+                    <button onclick="simulatePeakHour()" class="w-full bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-between transition">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-users-line text-amber-400"></i>
+                            ساعة ذروة فجائية (خروج موظفين)
+                        </span>
+                        <i class="fa-solid fa-chevron-left text-slate-500 text-xs"></i>
+                    </button>
+                    <button onclick="applyRerouting()" class="w-full bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-semibold py-3 px-4 rounded-xl flex items-center justify-between transition">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-route text-cyan-400"></i>
+                            تطبيق إعادة التوجيه الذكي
+                        </span>
+                        <i class="fa-solid fa-check text-cyan-400 text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Analytics Chart -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">مُعامل الكثافة التنبؤية (45 دقيقة)</h2>
+                <canvas id="trafficChart" height="160"></canvas>
+            </div>
+
+        </div>
+
+        <!-- Center & Right: Map & Live Events Log -->
+        <div class="lg:col-span-3 space-y-6 flex flex-col">
+            
+            <!-- Map Container -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-cyan-400"></i>
+                        <h2 class="text-sm font-bold text-slate-200">التوأم الرقمي المباشر للطرق المحورية</h2>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> تدفق سلس</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> كثافة متوسطة</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> ازدحام محتمل</span>
+                    </div>
+                </div>
+
+                <!-- Leaflet Interactive Map -->
+                <div id="map" class="w-full flex-1 rounded-xl"></div>
+            </div>
+
+            <!-- AI Sensory Stream & Decision Log -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-cyan-400"></i>
+                        سجل القرارات والاستجابة الأوتوماتيكية للذكاء الاصطناعي
+                    </h2>
+                    <span class="text-xs text-slate-500">محدث بشكل لحظي</span>
+                </div>
+                
+                <div id="logContainer" class="space-y-2.5 max-h-40 overflow-y-auto pr-1">
+                    <div class="bg-slate-800/60 border-r-4 border-cyan-500 p-3 rounded-lg text-xs flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-cyan-400">[11:04 AM] - تم تشغيل النموذج الإدراكي:</span>
+                            <span class="text-slate-300 mr-2">تحليل بيانات 142 كاميرا ومستشعر تدفق بنجاح.</span>
+                        </div>
+                        <span class="text-[10px] text-slate-500">منذ دقيقة</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 px-6 py-4 text-center text-xs text-slate-500">
+        مشروع منصة "إدراك" - مشاركة في هاكاثون المؤتمر الهندسي الدولي (IECE) | تصميم وتطوير هندسي 2026
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize Map centered on Riyadh High-Traffic Segment
+        const map = L.map('map').setView([24.7136, 46.6753], 13);
+
+        // Add Dark Mode Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Polylines representing main road corridors
+        const road1Coords = [[24.7300, 46.6600], [24.7200, 46.6700], [24.7100, 46.6800]]; // King Fahd Rd
+        const road2Coords = [[24.7000, 46.6500], [24.7100, 46.6700], [24.7250, 46.6900]]; // Northern Ring Rd
+
+        let polyline1 = L.polyline(road1Coords, {color: '#10b981', weight: 8, opacity: 0.8}).addTo(map);
+        let polyline2 = L.polyline(road2Coords, {color: '#10b981', weight: 8, opacity: 0.8}).addTo(map);
+
+        // Add Sensor Markers
+        const marker1 = L.marker([24.7200, 46.6700]).addTo(map).bindPopup("<b>مستشعر إدراكي #102</b><br>طريق الملك فهد - الحركة طبيعية");
+        const marker2 = L.marker([24.7100, 46.6700]).addTo(map).bindPopup("<b>تقاطع الإشارة الذكية #405</b><br>زمن الدورة: متكيف تلقائياً");
+
+        // Chart.js Setup
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        const trafficChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['الان', '+10 د', '+20 د', '+30 د', '+40 د', '+50 د'],
+                datasets: [{
+                    label: 'الكثافة المتوقعة (%)',
+                    data: [35, 42, 45, 38, 30, 28],
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.15)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, min: 0, max: 100 }
+                }
+            }
+        });
+
+        // Add Log Function
+        function addLog(title, message, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const logItem = document.createElement('div');
+            
+            let borderClass = 'border-cyan-500';
+            let titleClass = 'text-cyan-400';
+            if (type === 'warning') { borderClass = 'border-amber-500'; titleClass = 'text-amber-400'; }
+            if (type === 'danger') { borderClass = 'border-rose-500'; titleClass = 'text-rose-400'; }
+            if (type === 'success') { borderClass = 'border-emerald-500'; titleClass = 'text-emerald-400'; }
+
+            const currentTime = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+
+            logItem.className = `bg-slate-800/60 border-r-4 ${borderClass} p-3 rounded-lg text-xs flex justify-between items-center transition-all animate-fade-in`;
+            logItem.innerHTML = `
+                <div>
+                    <span class="font-bold ${titleClass}">[${currentTime}] - ${title}:</span>
+                    <span class="text-slate-300 mr-2">${message}</span>
+                </div>
+                <span class="text-[10px] text-slate-500">الآن</span>
+            `;
+            
+            container.prepend(logItem);
+        }
+
+        // AI Prediction Action
+        function triggerAIPrediction() {
+            addLog('تحليل استباقي', 'تم رؤية زيادة نمو كثافة متوقعة على طريق الملك فهد بعد 30 دقيقة.', 'warning');
+            
+            // Highlight road
+            polyline1.setStyle({color: '#f59e0b'});
+            
+            // Update chart data
+            trafficChart.data.datasets[0].data = [35, 58, 78, 65, 40, 30];
+            trafficChart.update();
+
+            document.getElementById('delayTime').innerText = '7 دقائق';
+            document.getElementById('riskScore').innerText = 'متوسط (معالج)';
+            document.getElementById('riskScore').className = 'text-xl font-extrabold text-amber-400';
+        }
+
+        // Simulation 1: Accident
+        function simulateIncident() {
+            polyline1.setStyle({color: '#ef4444'});
+            marker1.openPopup();
+            
+            addLog('تنبيه حادث', 'رصد تباطؤ حاد واصطدام على طريق الملك فهد - تم إرسال تنبيه فوراً للجهات المختصة.', 'danger');
+
+            document.getElementById('flowRate').innerText = '54%';
+            document.getElementById('delayTime').innerText = '18 دقيقة';
+            document.getElementById('riskScore').innerText = 'مرتفع جدًا';
+            document.getElementById('riskScore').className = 'text-xl font-extrabold text-rose-500';
+
+            trafficChart.data.datasets[0].data = [35, 85, 95, 90, 75, 60];
+            trafficChart.update();
+        }
+
+        // Simulation 2: Peak Hour
+        function simulatePeakHour() {
+            polyline2.setStyle({color: '#f59e0b'});
+            addLog('ساعة ذروة', 'ارتفاع مفاجئ في حركة المرور. تم زيادة فترة الإشارة الخضراء في التقاطع #405 بمقدار 25 ثانية.', 'warning');
+
+            document.getElementById('flowRate').innerText = '71%';
+            document.getElementById('delayTime').innerText = '11 دقيقة';
+        }
+
+        // Simulation 3: Dynamic Rerouting (Solution)
+        function applyRerouting() {
+            polyline1.setStyle({color: '#10b981'});
+            polyline2.setStyle({color: '#10b981'});
+
+            addLog('استجابة أوتوماتيكية', 'تم توجيه 30% من المركبات لمسارات فرعية بديلة وتعديل توقيت الإشارات. تم حل الأزمة!', 'success');
+
+            document.getElementById('flowRate').innerText = '94%';
+            document.getElementById('delayTime').innerText = '2 دقيقة';
+            document.getElementById('riskScore').innerText = 'منخفض جداً';
+            document.getElementById('riskScore').className = 'text-xl font-extrabold text-emerald-400';
+
+            trafficChart.data.datasets[0].data = [35, 40, 38, 32, 28, 25];
+            trafficChart.update();
+        }
+    </script>
+</body>
+</html>
