@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة إدراك - مركز التحكم والتحليل الاستباقي للكتلة المرورية</title>
+    <title>منصة إدراك - المنظومة الإدراكية الكاملة للإدارة المرورية والسلامة</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,246 +18,427 @@
 
     <style>
         * { font-family: 'Tajawal', sans-serif; }
-        body { background: #030712; color: #f3f4f6; }
-        .glass-panel {
-            background: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(12px);
+        body { background: #030712; color: #f3f4f6; overflow-x: hidden; }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .glow-cyan { box-shadow: 0 0 25px rgba(6, 182, 212, 0.15); }
-        #map { height: 100%; min-height: 520px; border-radius: 1rem; z-index: 1; }
-        .leaflet-tile-container { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.2); }
+        #map { height: 460px; border-radius: 1rem; z-index: 1; }
+        .leaflet-tile-container { filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(1.2); }
+        
+        .phone-mockup {
+            width: 300px;
+            height: 580px;
+            background: #000;
+            border: 10px solid #1f2937;
+            border-radius: 40px;
+            position: relative;
+            box-shadow: 0 0 35px rgba(6, 182, 212, 0.25);
+        }
+        .phone-notch {
+            width: 120px;
+            height: 18px;
+            background: #1f2937;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            margin: 0 auto;
+        }
+        .pulse-alarm {
+            animation: pulse-red 1s infinite alternate;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 10px rgba(244, 63, 94, 0.4); border-color: rgba(244, 63, 94, 0.8); }
+            100% { box-shadow: 0 0 30px rgba(244, 63, 94, 0.9); border-color: rgba(244, 63, 94, 1); }
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+<body class="min-h-screen flex flex-col antialiased">
 
-    <!-- Top Navigation Bar -->
-    <header class="glass-panel sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between border-b border-gray-800">
-        <div class="flex items-center gap-4">
-            <div class="h-11 w-11 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
-                <i class="fa-solid fa-brain-circuit text-xl"></i>
+    <!-- Header Navigation -->
+    <header class="glass-card sticky top-0 z-50 px-6 py-3 flex items-center justify-between border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-brain-circuit text-lg"></i>
             </div>
             <div>
-                <div class="flex items-center gap-2">
-                    <h1 class="text-lg font-black tracking-wide bg-gradient-to-r from-white via-gray-200 to-cyan-400 bg-clip-text text-transparent">
-                        إدراك | IDRAK
-                    </h1>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/50">
-                        Cognitive Traffic Engine
-                    </span>
-                </div>
-                <p class="text-xs text-gray-400">منصة التنبؤ الاستباقي وإدارة التدفق المروري الرقمي</p>
+                <h1 class="text-base font-black tracking-wide text-white flex items-center gap-2">
+                    منصة إدراك <span class="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-800 px-2 py-0.5 rounded-full">IDRAK AI Suite</span>
+                </h1>
+                <p class="text-[11px] text-gray-400">التنبؤ الاستباقي والسلامة الإدراكية داخل المركبة</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-5">
-            <!-- Data Ingestion Indicators -->
-            <div class="hidden xl:flex items-center gap-4 text-xs bg-gray-900/80 px-4 py-2 rounded-xl border border-gray-800">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-mobile-screen-button text-cyan-400"></i>
-                    <span class="text-gray-400">تتبع الجوالات (FCD): <strong class="text-emerald-400">نشط</strong></span>
-                </div>
-                <span class="text-gray-700">|</span>
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-video text-cyan-400"></i>
-                    <span class="text-gray-400">كاميرات Vision AI: <strong class="text-emerald-400">342 بث حي</strong></span>
-                </div>
-            </div>
+        <nav class="hidden md:flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 text-xs font-bold">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-2 rounded-lg text-cyan-400 bg-gray-800 transition">
+                <i class="fa-solid fa-chart-pie ml-1.5"></i>لوحة التحكم الذكية
+            </button>
+            <button onclick="switchTab('vehicle-safety')" id="tab-vehicle-safety" class="tab-btn px-4 py-2 rounded-lg text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-shield-halved ml-1.5"></i>السلامة والتنبؤ بالتصادم
+            </button>
+            <button onclick="switchTab('mobile-alerts')" id="tab-mobile-alerts" class="tab-btn px-4 py-2 rounded-lg text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-mobile-screen-button ml-1.5"></i>تنبيهات السائقين (Push)
+            </button>
+            <button onclick="switchTab('architecture')" id="tab-architecture" class="tab-btn px-4 py-2 rounded-lg text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-network-wired ml-1.5"></i>معمارية النظام
+            </button>
+        </nav>
 
-            <button onclick="triggerPrediction()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-lg shadow-cyan-500/20 flex items-center gap-2">
-                <i class="fa-solid fa-bolt"></i>
-                تشغيل محاكاة التنبؤ (30 دقيقة قادمة)
+        <div class="flex items-center gap-3">
+            <button onclick="sendLivePushNotification()" class="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-black font-extrabold text-xs px-4 py-2 rounded-xl transition shadow-lg shadow-rose-500/20 flex items-center gap-1.5">
+                <i class="fa-solid fa-volume-high"></i>
+                اختبار تنبيه صوتي للحادث
             </button>
         </div>
     </header>
 
-    <!-- Main Dashboard Grid -->
-    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Mobile Nav Bar -->
+    <div class="md:hidden flex overflow-x-auto bg-gray-900 border-b border-gray-800 p-2 text-xs gap-2">
+        <button onclick="switchTab('dashboard')" class="px-3 py-1.5 rounded-lg bg-gray-800 text-cyan-400 whitespace-nowrap">لوحة التحكم</button>
+        <button onclick="switchTab('vehicle-safety')" class="px-3 py-1.5 rounded-lg bg-gray-900 text-gray-300 whitespace-nowrap">السلامة بالمكائن</button>
+        <button onclick="switchTab('mobile-alerts')" class="px-3 py-1.5 rounded-lg bg-gray-900 text-gray-300 whitespace-nowrap">تنبيه الجوال والصوت</button>
+        <button onclick="switchTab('architecture')" class="px-3 py-1.5 rounded-lg bg-gray-900 text-gray-300 whitespace-nowrap">المعمارية</button>
+    </div>
 
-        <!-- Right Side Controls & Analytics (4 cols) -->
-        <div class="lg:col-span-4 space-y-6">
-            
-            <!-- Key Metrics Grid -->
-            <div class="grid grid-cols-2 gap-3">
-                <div class="glass-panel p-4 rounded-2xl border border-gray-800">
-                    <div class="flex justify-between items-center text-gray-400 text-xs mb-2">
-                        <span>مؤشر الانسيابية</span>
-                        <i class="fa-solid fa-wave-square text-cyan-400"></i>
+    <main class="flex-1 p-6">
+
+        <!-- ================= PAGE 1: DASHBOARD ================= -->
+        <section id="page-dashboard" class="page-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 space-y-5">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="glass-card p-4 rounded-2xl">
+                            <span class="text-xs text-gray-400 block mb-1">مؤشر الانسيابية</span>
+                            <span id="dashFlow" class="text-2xl font-black text-cyan-400">89%</span>
+                            <span class="text-[10px] text-emerald-400 block mt-1"><i class="fa-solid fa-arrow-trend-up"></i> ممتازة</span>
+                        </div>
+                        <div class="glass-card p-4 rounded-2xl">
+                            <span class="text-xs text-gray-400 block mb-1">خطر التصادم المحتمل</span>
+                            <span id="dashRisk" class="text-2xl font-black text-emerald-400">منخفض جداً</span>
+                            <span class="text-[10px] text-gray-400 block mt-1">بناءً على السرعات الحية</span>
+                        </div>
                     </div>
-                    <div id="flowMetric" class="text-2xl font-black text-cyan-400">88%</div>
-                    <p class="text-[10px] text-emerald-400 mt-1"><i class="fa-solid fa-arrow-trend-up"></i> ممتازة مقارنة بالأمس</p>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl border border-gray-800">
-                    <div class="flex justify-between items-center text-gray-400 text-xs mb-2">
-                        <span>التأخير المتوقع</span>
-                        <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+
+                    <div class="glass-card p-5 rounded-2xl space-y-3">
+                        <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2">محاكاة سيناريوهات المدينة</h3>
+                        <button onclick="simAccident()" class="w-full bg-gray-900/90 hover:bg-rose-950/40 border border-gray-800 text-gray-200 text-xs p-3 rounded-xl flex justify-between items-center transition">
+                            <span><i class="fa-solid fa-car-burst text-rose-400 ml-2"></i>محاكاة توقف مفاجئ للطريق (مع صوت)</span>
+                            <i class="fa-solid fa-chevron-left text-gray-600 text-xs"></i>
+                        </button>
+                        <button onclick="simResolve()" class="w-full bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40 text-cyan-300 text-xs p-3 rounded-xl flex justify-between items-center transition font-bold">
+                            <span><i class="fa-solid fa-shield-check text-cyan-400 ml-2"></i>تفعيل إعادة التوجيه وتهدئة السرعة</span>
+                            <i class="fa-solid fa-check text-cyan-400"></i>
+                        </button>
                     </div>
-                    <div id="delayMetric" class="text-2xl font-black text-gray-200">4 دقائق</div>
-                    <p class="text-[10px] text-gray-400 mt-1">متوسط زمن الرحلة</p>
-                </div>
-            </div>
 
-            <!-- Simulation Controls -->
-            <div class="glass-panel p-5 rounded-2xl border border-gray-800 space-y-3">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>سيناريوهات المحاكاة الاستباقية</span>
-                    <i class="fa-solid fa-sliders text-cyan-400"></i>
-                </h3>
-
-                <button onclick="triggerAccidentScenario()" class="w-full bg-gray-900/90 hover:bg-rose-950/30 border border-gray-800 hover:border-rose-500/40 text-gray-200 text-xs font-semibold p-3 rounded-xl flex items-center justify-between transition">
-                    <span class="flex items-center gap-2.5">
-                        <i class="fa-solid fa-car-burst text-rose-400 text-sm"></i>
-                        رصد حادث مروري (رؤية حاسوبية)
-                    </span>
-                    <i class="fa-solid fa-chevron-left text-gray-600 text-xs"></i>
-                </button>
-
-                <button onclick="triggerPeakScenario()" class="w-full bg-gray-900/90 hover:bg-amber-950/30 border border-gray-800 hover:border-amber-500/40 text-gray-200 text-xs font-semibold p-3 rounded-xl flex items-center justify-between transition">
-                    <span class="flex items-center gap-2.5">
-                        <i class="fa-solid fa-city text-amber-400 text-sm"></i>
-                        ذروة خروج موظفين (تتبع الجوالات)
-                    </span>
-                    <i class="fa-solid fa-chevron-left text-gray-600 text-xs"></i>
-                </button>
-
-                <button onclick="triggerOptimization()" class="w-full bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40 text-cyan-300 text-xs font-bold p-3 rounded-xl flex items-center justify-between transition">
-                    <span class="flex items-center gap-2.5">
-                        <i class="fa-solid fa-mobile-vibration text-cyan-400 text-sm"></i>
-                        بث تنبيه الجوالات + تعديل الإشارات
-                    </span>
-                    <i class="fa-solid fa-circle-check text-cyan-400 text-xs"></i>
-                </button>
-            </div>
-
-            <!-- Live Chart -->
-            <div class="glass-panel p-5 rounded-2xl border border-gray-800">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">التنبؤ التراكمي للازدحام (خلال ساعة)</h3>
-                <canvas id="predictionChart" height="150"></canvas>
-            </div>
-
-        </div>
-
-        <!-- Center Map & Action Log (8 cols) -->
-        <div class="lg:col-span-8 flex flex-col space-y-6">
-            
-            <!-- Map Card -->
-            <div class="glass-panel p-4 rounded-2xl border border-gray-800 flex-1 flex flex-col relative glow-cyan">
-                <div class="flex items-center justify-between mb-3 px-2">
-                    <div class="flex items-center gap-2">
-                        <span class="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
-                        <h2 class="text-xs font-bold text-gray-200">التوأم الرقمي الحي للشبكة العمرانية</h2>
-                    </div>
-                    <div class="flex items-center gap-4 text-[11px] text-gray-400">
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> انسيابي</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> متوقع تباطؤه</span>
-                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> حرج</span>
+                    <div class="glass-card p-5 rounded-2xl">
+                        <h3 class="text-xs font-bold text-gray-400 mb-3">التنبؤ بالتأخير خلال 45 دقيقة</h3>
+                        <canvas id="dashChart" height="150"></canvas>
                     </div>
                 </div>
 
-                <div id="map"></div>
-            </div>
-
-            <!-- Automated Response & Mobile Broadcast Log -->
-            <div class="glass-panel p-4 rounded-2xl border border-gray-800">
-                <h3 class="text-xs font-bold text-gray-300 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-tower-cell text-cyan-400"></i>
-                    سجل البث التفاعلي والاستجابة الذكية (Automated Dispatch)
-                </h3>
-                <div id="logPanel" class="space-y-2 max-h-36 overflow-y-auto text-xs pr-1">
-                    <div class="bg-gray-900/80 border-r-4 border-cyan-500 p-2.5 rounded-lg flex justify-between items-center">
-                        <span class="text-gray-300">تم استقبال بيانات حركة 14,200 جوال بالمنطقة المركزية - الحركة مستقرة.</span>
-                        <span class="text-[10px] text-gray-500">الآن</span>
+                <div class="lg:col-span-8 space-y-5 flex flex-col">
+                    <div class="glass-card p-4 rounded-2xl flex-1 flex flex-col">
+                        <div class="flex justify-between items-center mb-3 text-xs">
+                            <span class="font-bold text-gray-200 flex items-center gap-2">
+                                <span class="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span> التوأم الرقمي للشبكة العمرانية
+                            </span>
+                            <div class="flex gap-3 text-gray-400">
+                                <span><i class="fa-solid fa-circle text-emerald-500 text-[10px]"></i> آمن</span>
+                                <span><i class="fa-solid fa-circle text-amber-500 text-[10px]"></i> تباطؤ</span>
+                                <span><i class="fa-solid fa-circle text-rose-500 text-[10px]"></i> خطورة تصادم</span>
+                            </div>
+                        </div>
+                        <div id="map"></div>
                     </div>
                 </div>
             </div>
+        </section>
 
-        </div>
+        <!-- ================= PAGE 2: IN-VEHICLE SAFETY ================= -->
+        <section id="page-vehicle-safety" class="page-content hidden space-y-6">
+            <div class="glass-card p-6 rounded-3xl border border-cyan-500/30">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-black text-white">محرك السلامة الإدراكية والتنبؤ بالتصادم (Collision Avoidance Engine)</h2>
+                        <p class="text-xs text-gray-400">يقرأ سرعات السيارات المتتالية ويصدر صفارات تحذيرية صريحة للتهدئة المسبقة</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-gray-900/90 p-5 rounded-2xl border border-gray-800 text-center space-y-2">
+                        <span class="text-xs text-gray-400">سرعتك الحالية</span>
+                        <div id="currentSpeed" class="text-4xl font-black text-cyan-400">110 <span class="text-sm font-normal text-gray-400">كم/س</span></div>
+                        <span class="text-[11px] text-emerald-400">طريق سريع - انسيابي</span>
+                    </div>
+
+                    <div class="bg-gray-900/90 p-5 rounded-2xl border border-gray-800 text-center space-y-2">
+                        <span class="text-xs text-gray-400">سرعة المركبات أمامك (مسافة 600م)</span>
+                        <div id="aheadSpeed" class="text-4xl font-black text-rose-500">15 <span class="text-sm font-normal text-gray-400">كم/س</span></div>
+                        <span class="text-[11px] text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> رصد تباطؤ حاد مفاجئ!</span>
+                    </div>
+
+                    <div class="bg-gray-900/90 p-5 rounded-2xl border border-cyan-500/40 text-center space-y-2 bg-cyan-950/20">
+                        <span class="text-xs text-cyan-300 font-bold">السرعة الموصى بها تلقائياً</span>
+                        <div id="recSpeed" class="text-4xl font-black text-amber-400">50 <span class="text-sm font-normal text-gray-400">كم/س</span></div>
+                        <span class="text-[11px] text-cyan-400">لتفادي التصادم والتوقف الأمني</span>
+                    </div>
+                </div>
+
+                <div id="brakeAlertBox" class="bg-rose-950/40 border-2 border-rose-500 p-6 rounded-2xl flex items-center justify-between pulse-alarm">
+                    <div class="flex items-center gap-4">
+                        <i class="fa-solid fa-volume-high text-rose-500 text-4xl animate-bounce"></i>
+                        <div>
+                            <h4 class="text-base font-black text-rose-400">تنبيه صوتي ومرئي: قم بهدأة السرعة فوراً!</h4>
+                            <p class="text-xs text-gray-300 mt-1">احتمالية توقف تام للسيارات بعد 450 متر. خفّض السرعة لـ 50 كم/س فوراً لتجنب التصادم.</p>
+                        </div>
+                    </div>
+                    <button onclick="simulateBrakeApplied()" class="bg-rose-500 hover:bg-rose-600 text-black font-extrabold text-xs px-5 py-3 rounded-xl transition whitespace-nowrap">
+                        تمت تهدئة السرعة (تأكيد)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 3: PUSH NOTIFICATION SIMULATOR ================= -->
+        <section id="page-mobile-alerts" class="page-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-12 py-6">
+                <div class="phone-mockup flex flex-col justify-between p-4">
+                    <div class="phone-notch"></div>
+                    
+                    <div class="flex-1 my-4 bg-gray-900 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden border border-gray-800">
+                        <div class="flex justify-between items-center text-[10px] text-gray-400">
+                            <span>04:33</span>
+                            <div class="flex gap-1.5"><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-full"></i></div>
+                        </div>
+
+                        <div id="mobilePushCard" class="absolute top-10 left-3 right-3 bg-gray-800/95 border border-cyan-500/50 p-3.5 rounded-2xl shadow-2xl space-y-1 transform transition-all duration-500">
+                            <div class="flex justify-between items-center text-[10px] text-cyan-400 font-bold">
+                                <span><i class="fa-solid fa-brain-circuit ml-1"></i>تطبيق إدراك للملاحة</span>
+                                <span>الآن</span>
+                            </div>
+                            <h5 id="pushTitle" class="text-xs font-black text-white">تنبيه سلامة استباقي!</h5>
+                            <p id="pushBody" class="text-[11px] text-gray-300 leading-snug">احتمالية توقف تام بعد 500 متر. تم خفض السرعة المقترحة لـ 50 كم/س وتحويل المسار.</p>
+                        </div>
+
+                        <div class="text-center my-auto space-y-3">
+                            <div class="h-16 w-16 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto text-2xl border border-cyan-500/30">
+                                <i class="fa-solid fa-location-arrow"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-white">جاري توجيه المركبة ذكياً</h4>
+                            <p class="text-xs text-gray-400">السرعة الحالية: <span class="text-emerald-400 font-bold">50 كم/س</span></p>
+                        </div>
+
+                        <div class="bg-gray-800 p-2.5 rounded-xl text-center text-[10px] text-gray-400">
+                            النظام متصل ببث الحركة اللحظي للمدينة
+                        </div>
+                    </div>
+
+                    <div class="h-1 w-24 bg-gray-600 rounded-full mx-auto"></div>
+                </div>
+
+                <div class="max-w-md space-y-4">
+                    <h3 class="text-lg font-black text-white">اختبار البث الصوتي الفوري للجوالات</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">اختر نوع التنبيه لاختبار جودة الصوت القوي والنغمات التحذيرية التي ستصل للهواتف والمركبات أثناء القيادة.</p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="triggerCustomPush('تنبيه حادث أمامي وشيك!', 'تباطؤ حاد لـ 10 سيارات أمامك. قم بتهدئة السرعة فوراً لـ 40 كم/س.', true)" class="w-full bg-gray-900 border border-gray-800 hover:border-rose-500 text-xs text-right p-3.5 rounded-xl transition flex items-center gap-3">
+                            <i class="fa-solid fa-volume-high text-rose-500 text-xl"></i>
+                            <div>
+                                <strong class="block text-white">تنبيه إنذار تصادم (صوت قوي مرتفع)</strong>
+                                <span class="text-[10px] text-gray-400">نغمة تحذيرية مزدوجة لإجبار السائق على التهدئة</span>
+                            </div>
+                        </button>
+
+                        <button onclick="triggerCustomPush('اقتراح مسار بديل', 'ازدحام متوقع بعد 15 دقيقة. انعطف يميناً نحو طريق التخصصي لتوفير 14 دقيقة.', false)" class="w-full bg-gray-900 border border-gray-800 hover:border-cyan-500 text-xs text-right p-3.5 rounded-xl transition flex items-center gap-3">
+                            <i class="fa-solid fa-circle-info text-cyan-400 text-xl"></i>
+                            <div>
+                                <strong class="block text-white">تنبيه إعادة التوجيه (صوت إرشادي)</strong>
+                                <span class="text-[10px] text-gray-400">نغمة إرشادية خفيفة للتنبيه المسبق</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 4: ARCHITECTURE ================= -->
+        <section id="page-architecture" class="page-content hidden space-y-6">
+            <div class="glass-card p-6 rounded-3xl space-y-6">
+                <div>
+                    <h2 class="text-lg font-black text-white">معمارية ومصادر بيانات "إدراك" (Data & Tech Stack)</h2>
+                    <p class="text-xs text-gray-400 mt-1">توضيح تقني للجنة التحكيم حول كيفية ربط المدخلات بالذكاء الاصطناعي والمخرجات</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-900/90 p-5 rounded-2xl border border-gray-800 space-y-3">
+                        <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider block"><i class="fa-solid fa-download ml-1.5"></i>1. مدخلات البيانات</span>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc list-inside">
+                            <li><strong>Floating Car Data (FCD):</strong> تتبع سرعات الجوالات والمركبات اللحظية.</li>
+                            <li><strong>Vision AI CCTV:</strong> تحليل بث كاميرات الطرق لعد المركبات واكتشاف الحوادث.</li>
+                            <li><strong>IoT Traffic Signals:</strong> قراءة حالة وحلقات الإشارات الضوئية.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gray-900/90 p-5 rounded-2xl border border-gray-800 space-y-3">
+                        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block"><i class="fa-solid fa-gears ml-1.5"></i>2. المعالجة والتنبؤ</span>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc list-inside">
+                            <li><strong>Cognitive AI Engine:</strong> التنبؤ بالازدحام والتوقف قبل 30-45 دقيقة.</li>
+                            <li><strong>Digital Twin Simulation:</strong> محاكاة أثر التدفق المروري في الوقت الفعلي.</li>
+                            <li><strong>Collision Risk Assessment:</strong> تقييم خطر التصادم بناءً على الفارق الزمني بين السرعات.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gray-900/90 p-5 rounded-2xl border border-gray-800 space-y-3">
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block"><i class="fa-solid fa-upload ml-1.5"></i>3. الاستجابة والأثر</span>
+                        <ul class="text-xs text-gray-300 space-y-2 list-disc list-inside">
+                            <li><strong>Mobile Push Alerts:</strong> إرسال تنبيهات التهدئة والمسارات البديلة.</li>
+                            <li><strong>Dynamic Signal Control:</strong> أتمتة تمديد الإشارات الخضراء لتفريغ الاختناق.</li>
+                            <li><strong>Emergency Green Corridors:</strong> فتح ممرات آمنة فورية لمركبات الإسعاف والمرور.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Map Setup
+        // Web Audio Synthesizer for Loud Collision Warning Sounds
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playAlarmSound(isUrgent = true) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = isUrgent ? 'sawtooth' : 'sine';
+            
+            if (isUrgent) {
+                // High-Pitch Loud Two-Tone Siren Sound
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.2); // A4
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            } else {
+                // Gentle Soft Info Chime
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.3); // E5
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            }
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + (isUrgent ? 0.6 : 0.4));
+        }
+
+        // Navigation Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-cyan-400', 'bg-gray-800');
+                el.classList.add('text-gray-400');
+            });
+
+            document.getElementById('page-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.add('text-cyan-400', 'bg-gray-800');
+                activeBtn.classList.remove('text-gray-400');
+            }
+
+            if(tabId === 'dashboard') { setTimeout(() => map.invalidateSize(), 200); }
+        }
+
+        // Leaflet Map Initialization
         const map = L.map('map', { zoomControl: false }).setView([24.7136, 46.6753], 13);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Road Paths
         const path1 = [[24.7300, 46.6600], [24.7200, 46.6700], [24.7100, 46.6800]];
-        const path2 = [[24.7000, 46.6500], [24.7100, 46.6700], [24.7250, 46.6900]];
-
-        let road1 = L.polyline(path1, { color: '#10b981', weight: 7, opacity: 0.9 }).addTo(map);
-        let road2 = L.polyline(path2, { color: '#10b981', weight: 7, opacity: 0.9 }).addTo(map);
+        let road1 = L.polyline(path1, { color: '#10b981', weight: 8, opacity: 0.9 }).addTo(map);
 
         // Chart Setup
-        const ctx = document.getElementById('predictionChart').getContext('2d');
+        const ctx = document.getElementById('dashChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['الآن', '+10 د', '+20 د', '+30 د', '+40 د', '+50 د'],
+                labels: ['الآن', '+10د', '+20د', '+30د', '+40د'],
                 datasets: [{
-                    label: 'الضغط المروري %',
-                    data: [30, 35, 40, 38, 32, 28],
+                    label: 'نسبة التكدس %',
+                    data: [25, 30, 35, 28, 20],
                     borderColor: '#06b6d4',
                     backgroundColor: 'rgba(6, 182, 212, 0.1)',
                     fill: true,
                     tension: 0.4
                 }]
             },
-            options: {
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { color: '#6b7280' }, grid: { color: '#1f2937' } },
-                    y: { ticks: { color: '#6b7280' }, grid: { color: '#1f2937' }, min: 0, max: 100 }
-                }
-            }
+            options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6b7280' } }, y: { ticks: { color: '#6b7280' }, min: 0, max: 100 } } }
         });
 
-        function pushLog(msg, type='info') {
-            const panel = document.getElementById('logPanel');
-            const colors = {
-                info: 'border-cyan-500 text-cyan-400',
-                warning: 'border-amber-500 text-amber-400',
-                danger: 'border-rose-500 text-rose-400',
-                success: 'border-emerald-500 text-emerald-400'
-            };
-            const div = document.createElement('div');
-            div.className = `bg-gray-900/80 border-r-4 ${colors[type].split(' ')[0]} p-2.5 rounded-lg flex justify-between items-center animate-fade-in`;
-            div.innerHTML = `<span class="text-gray-200">${msg}</span><span class="text-[10px] text-gray-500">الآن</span>`;
-            panel.prepend(div);
-        }
-
-        function triggerPrediction() {
-            road1.setStyle({ color: '#f59e0b' });
-            chart.data.datasets[0].data = [30, 50, 75, 60, 40, 30];
-            chart.update();
-            document.getElementById('delayMetric').innerText = '8 دقائق';
-            pushLog('تنبؤ الذكاء الاصطناعي: احتمال ازدحام بنسبة 75% خلال 20 دقيقة على طريق الملك فهد.', 'warning');
-        }
-
-        function triggerAccidentScenario() {
+        function simAccident() {
             road1.setStyle({ color: '#f43f5e' });
-            document.getElementById('flowMetric').innerText = '42%';
-            document.getElementById('delayMetric').innerText = '22 دقيقة';
-            chart.data.datasets[0].data = [30, 80, 95, 90, 85, 70];
+            document.getElementById('dashFlow').innerText = '38%';
+            document.getElementById('dashRisk').innerText = 'مرتفع جداً!';
+            document.getElementById('dashRisk').className = 'text-2xl font-black text-rose-500';
+            chart.data.datasets[0].data = [25, 85, 95, 80, 60];
             chart.update();
-            pushLog('رصد حادث عبر كاميرا CCTV #201: تم إرسال إشعار فوري لمركبات المرور والمستجيب الأول.', 'danger');
+
+            // Play Siren Sound & Trigger Push
+            playAlarmSound(true);
+            triggerCustomPush('تنبيه توقف مفاجئ!', 'تم رصد تباطؤ حاد لـ 12 سيارة أمامك. اخفض السرعة لـ 50 كم/س فوراً لتجنب التصادم.', true);
         }
 
-        function triggerPeakScenario() {
-            road2.setStyle({ color: '#f59e0b' });
-            pushLog('تطابق بيانات الجوالات: ارتفاع مؤشر حركة المشاة والمركبات في قطاع الأعمال بنسبة 40%.', 'warning');
-        }
-
-        function triggerOptimization() {
+        function simResolve() {
             road1.setStyle({ color: '#10b981' });
-            road2.setStyle({ color: '#10b981' });
-            document.getElementById('flowMetric').innerText = '91%';
-            document.getElementById('delayMetric').innerText = '3 دقائق';
-            chart.data.datasets[0].data = [30, 35, 32, 28, 25, 22];
+            document.getElementById('dashFlow').innerText = '92%';
+            document.getElementById('dashRisk').innerText = 'منخفض جداً';
+            document.getElementById('dashRisk').className = 'text-2xl font-black text-emerald-400';
+            chart.data.datasets[0].data = [25, 30, 28, 22, 20];
             chart.update();
-            pushLog('تم بث إشعارات الجوال لـ 3,400 سائق بالمنطقة لتحويل المسار + تمديد الإشارة الخضراء 20 ثانية.', 'success');
+            playAlarmSound(false);
+        }
+
+        function triggerCustomPush(title, body, isUrgent = true) {
+            document.getElementById('pushTitle').innerText = title;
+            document.getElementById('pushBody').innerText = body;
+            const card = document.getElementById('mobilePushCard');
+            
+            playAlarmSound(isUrgent);
+
+            card.classList.remove('opacity-0', 'translate-y-[-20px]');
+            card.classList.add('animate-bounce');
+            setTimeout(() => card.classList.remove('animate-bounce'), 1000);
+        }
+
+        function sendLivePushNotification() {
+            switchTab('mobile-alerts');
+            triggerCustomPush('تحذير تصادم استباقي!', 'تم رصد توقف تام للسيارات بعد 400 متر. النظام ينصح بالتهدئة لـ 40 كم/س فوراً.', true);
+        }
+
+        function simulateBrakeApplied() {
+            playAlarmSound(false);
+            document.getElementById('currentSpeed').innerHTML = '50 <span class="text-sm font-normal text-gray-400">كم/س</span>';
+            document.getElementById('brakeAlertBox').className = 'bg-emerald-950/40 border-2 border-emerald-500 p-6 rounded-2xl flex items-center justify-between';
+            document.getElementById('brakeAlertBox').innerHTML = `
+                <div class="flex items-center gap-4">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-4xl"></i>
+                    <div>
+                        <h4 class="text-base font-black text-emerald-400">تم خفض السرعة واستقرار حركة المركبة!</h4>
+                        <p class="text-xs text-gray-300">تم تجنب خطورة التصادم بنجاح بفضل التنبؤ الاستباقي للسرعات.</p>
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>
